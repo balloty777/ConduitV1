@@ -5,9 +5,13 @@ class ConduitException(Exception):
 
 class ResourceNotFoundException(ConduitException):
     def __init__(self,msg:str):
-        super.__init__(msg)
+        super().__init__(msg)
 
 class ResourceAlreadyExist(ConduitException):
     def __init__(self,msg:str):
-        super.__init__(msg)
+        super().__init__(msg)
+
+class InvalidStateTransitionException(ConduitException):
+    def __init__(self,msg:str):
+        super().__init__(msg)
 
