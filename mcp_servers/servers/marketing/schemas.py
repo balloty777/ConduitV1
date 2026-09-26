@@ -21,7 +21,6 @@ class GetContentOutput(BaseModel):
     content:str
     status:str
 class ScheduleContentInput(BaseModel):
-    content_id:UUID
     scheduled_at:datetime
 class ScheduleContentOutput(BaseModel):
     content_id:UUID

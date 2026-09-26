@@ -30,7 +30,7 @@ class SalesService:
     def delete_lead(self,lead_id:UUID)->None:
         lead=self.salesleadrepository.get_by_id(lead_id)
         if lead is None:
-            raise ResourceNotFoundException(f"Lead id {lead_id} does not eixsts")
+            raise ResourceNotFoundException(f"Lead id {lead_id} does not eixst")
         try :
             self.salesleadrepository.delete(lead.id)
             self.db.commit()
@@ -40,7 +40,7 @@ class SalesService:
     def follow_up_lead(self,lead_id:UUID,execution_id:UUID,message:str,channel:str,scheduled_at:datetime|None=None)->SalesFollowUp:
         lead=self.salesleadrepository.get_by_id(lead_id)
         if lead is None:
-            raise ResourceNotFoundException(f"Lead if {lead_id} does not exist")
+            raise ResourceNotFoundException(f"Lead id {lead_id} does not exist")
         follow_up=SalesFollowUp(
             lead_id=lead_id,
             execution_id=execution_id,
@@ -57,11 +57,11 @@ class SalesService:
             self.db.rollback()
             raise
     def delete_follow_up(self,follow_up_id:UUID)->None:
-        lead=self.salesfollowuprepository.get_by_id(follow_up_id)
-        if lead is None:
-            raise ResourceNotFoundException(f"Follow up id {follow_up_id} does not exists")
+        follow_up=self.salesfollowuprepository.get_by_id(follow_up_id)
+        if follow_up is None:
+            raise ResourceNotFoundException(f"Follow up id {follow_up_id} does not exist")
         try:
-            self.salesfollowuprepository.delete(lead.id)
+            self.salesfollowuprepository.delete(follow_up_id)
             self.db.commit()
         except Exception:
             self.db.rollback()

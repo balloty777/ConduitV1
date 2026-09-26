@@ -16,7 +16,6 @@ class CreateTicketOutput(BaseModel):
     priority:str
     status:str
 class TicketFixInput(BaseModel):
-    ticket_id:UUID
     execution_id:UUID
     proposed_fix:str
 class TicketFixOutput(BaseModel):

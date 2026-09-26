@@ -14,7 +14,7 @@ class SalesLeadRepository:
     def get_by_execution_id(self,execution_id:UUID)->SalesLead|None:
         return self.db.get(SalesLead,execution_id)
     def get_by_email(self,email:str)->SalesLead|None:
-        return self.db.get(SalesLead,email)
+        return self.db.query(SalesLead).filter(SalesLead.email==email).first()
     def update(self,sales_lead:SalesLead)->SalesLead:
         self.db.flush()
         return sales_lead

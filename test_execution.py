@@ -1,25 +1,30 @@
 import uuid
+
 from database.database import SessionLocal
 from database.models.user import User
 from database.models.workflow_execution import WorkflowExecution
 
 with SessionLocal() as db:
-    user=User(
-        email="test@conduit.local",
+    user = User(
+        email="test4@conduit.local",
         role="admin",
         team="Management"
     )
+
     db.add(user)
     db.flush()
 
-    execution=WorkflowExecution(
+    execution = WorkflowExecution(
         user_id=user.id,
         request="Announce our new AI workflow automation feature",
-        workflow="marketing",
+        workflow="Tech",
         status="pending"
     )
+
     db.add(execution)
     db.flush()
+
+    db.commit()
     db.refresh(execution)
 
     print(f"user_id: {user.id}")

@@ -15,7 +15,6 @@ class CreateLeadOutput(BaseModel):
     phone:str|None=None
     status:str
 class FollowUpLeadInput(BaseModel):
-    lead_id:UUID
     execution_id:UUID
     message:str
     channel:str
