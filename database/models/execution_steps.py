@@ -13,7 +13,7 @@ class ExecutionStep(Base):
     )
     execution_id:Mapped[uuid.UUID]=mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("workflow_executions.id"),
+        ForeignKey("workflow_executions.id",ondelete="CASCADE"),
         nullable=False,
         index=True
     )

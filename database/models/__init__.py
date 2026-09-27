@@ -6,3 +6,4 @@ from database.models.sales_lead import SalesLead
 from database.models.sales_follow_ups import SalesFollowUp
 from database.models.tech_ticket import TechTicket
 from database.models.tech_fix import TechFix
+from database.models.approval_request import ApprovalRequest

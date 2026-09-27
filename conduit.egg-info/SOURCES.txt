@@ -17,6 +17,7 @@ core/config.py
 database/__init__.py
 database/database.py
 database/models/__init__.py
+database/models/approval_request.py
 database/models/execution_steps.py
 database/models/marketing_content.py
 database/models/sales_follow_ups.py

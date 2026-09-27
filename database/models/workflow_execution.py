@@ -51,4 +51,5 @@ class WorkflowExecution(Base):
     steps: Mapped[list["ExecutionStep"]] = relationship(
         "ExecutionStep",
         back_populates="execution",
+        cascade="all, delete-orphan"
     )
