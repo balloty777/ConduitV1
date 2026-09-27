@@ -2,6 +2,7 @@ agents
 api
 core
 database
+exceptions
 guardrails
 llm
 mcp_servers

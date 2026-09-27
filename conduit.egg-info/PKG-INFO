@@ -2,4 +2,7 @@ Metadata-Version: 2.4
 Name: conduit
 Version: 0.1.0
 Requires-Python: >=3.11
-Requires-Dist: mcp<2,>=1.28
+Requires-Dist: alembic>=1.20.0
+Requires-Dist: mcp[cli]<2,>=1.28
+Requires-Dist: psycopg[binary]>=3.3.6
+Requires-Dist: sqlalchemy>=2.1.1

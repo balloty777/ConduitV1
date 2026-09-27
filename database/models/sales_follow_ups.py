@@ -16,7 +16,7 @@ class SalesFollowUp(Base):
     )
     lead_id:Mapped[uuid.UUID]=mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("sales_leads.id"),
+        ForeignKey("sales_leads.id",ondelete="CASCADE"),
         nullable=False,
         index=True
     )

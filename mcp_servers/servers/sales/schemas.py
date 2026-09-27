@@ -14,7 +14,13 @@ class CreateLeadOutput(BaseModel):
     email:str
     phone:str|None=None
     status:str
+class DeleteLeadInput(BaseModel):
+    lead_id: UUID
+class DeleteLeadOutput(BaseModel):
+    lead_id: UUID
+    deleted: bool
 class FollowUpLeadInput(BaseModel):
+    lead_id:UUID
     execution_id:UUID
     message:str
     channel:str
@@ -27,3 +33,8 @@ class FollowUpLeadOutput(BaseModel):
     channel:str
     status:str
     scheduled_at: datetime | None=None
+class DeleteFollowUpInput(BaseModel):
+    follow_up_id: UUID
+class DeleteFollowUpOutput(BaseModel):
+    follow_up_id: UUID
+    deleted: bool

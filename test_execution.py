@@ -6,7 +6,7 @@ from database.models.workflow_execution import WorkflowExecution
 
 with SessionLocal() as db:
     user = User(
-        email="test4@conduit.local",
+        email="test5@conduit.local",
         role="admin",
         team="Management"
     )
@@ -17,7 +17,7 @@ with SessionLocal() as db:
     execution = WorkflowExecution(
         user_id=user.id,
         request="Announce our new AI workflow automation feature",
-        workflow="Tech",
+        workflow="Marketing",
         status="pending"
     )
 
