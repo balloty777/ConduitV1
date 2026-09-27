@@ -9,7 +9,7 @@ class State(TypedDict):
     current_node:str|None
     subject_type:str|None
     subject_id:str|None
-    approval_rquest_id:UUID|None
+    approval_request_id:UUID|None
     approval_reason:str|None
     output:str|None
     error:str|None
