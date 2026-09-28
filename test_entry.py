@@ -11,6 +11,7 @@ state: State = {
     "request": "Create a Diwali marketing campaign.",
     "user_id": user_id,
     "execution_id": None,
+    "current_step_id": None,
     "workflow": None,
     "confidence": None,
     "status": "pending",

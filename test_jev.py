@@ -1,4 +1,4 @@
-from services.jev_service import JevService
+from llm.jev_service import JevService
 jev = JevService()
 state = {
     "request": "Create a Diwali marketing campaign for our customers.",

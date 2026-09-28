@@ -4,6 +4,7 @@ from database.models.workflow_execution import WorkflowExecution
 from database.models.execution_steps import ExecutionStep
 from database.repositories.workflow_execution_repository import WorkflowExecutionRepository
 from database.repositories.execution_step_repository import ExecutionStepRepository
+from exceptions.exceptions import ResourceNotFoundException
 from zoneinfo import ZoneInfo
 IST = ZoneInfo("Asia/Kolkata")
 
@@ -32,4 +33,42 @@ class WorkflowExecutionService:
         except Exception:
             self.db.rollback()
             raise
+    def complete_step(self,step:ExecutionStep,output_data:dict)->ExecutionStep:
+        step.output_data=output_data
+        step.status="completed"
+        try:
+            self.execution_step_repository.update(step)
+            self.db.commit()
+            self.db.refresh(step)
+            return step
+        except Exception:
+            self.db.rollback()
+            raise
+    def fail_step(self,step:ExecutionStep,error:str)->ExecutionStep:
+        step.output_data={"error":error}
+        step.status="failed"
+        try:
+            self.execution_step_repository.update(step)
+            self.db.commit()
+            self.db.refresh(step)
+            return step
+        except Exception:
+            self.db.rollback()
+            raise
+    def fail_execution(self,execution_id:UUID,error:str)->WorkflowExecution:
+        execution=self.workflow_execution_repository.get_by_id(execution_id)
+        if execution is None:
+            raise ResourceNotFoundException(f"Workflow execution not found: {execution_id}")
+        execution.status="failed"
+        execution.result=error
+        try:
+            self.workflow_execution_repository.update(execution)
+            self.db.commit()
+            self.db.refresh(execution)
+            return execution
+        except Exception:
+            self.db.rollback()
+            raise
+
+
 

@@ -17,7 +17,7 @@ state = {
     "error": None,
 }
 
-result = router_node(state, None)
+result = router_node(state)
 
 print("Workflow:", result["workflow"])
 print("Confidence:", result["confidence"])

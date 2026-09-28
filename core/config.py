@@ -7,8 +7,10 @@ class Settings(BaseSettings):
 
     database_url: str
     openai_api_key: str
-    naga_api_key: str
     openrouter_api_key: str
+    openai_model: str
+    jev_model: str
+    jev_base_url: str
 
 
 settings = Settings()

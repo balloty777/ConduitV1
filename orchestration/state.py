@@ -4,6 +4,7 @@ class State(TypedDict):
     request:str
     user_id:UUID
     execution_id:UUID|None
+    current_step_id:UUID|None
     workflow:str|None
     confidence:float|None
     status:str
