@@ -5,3 +5,4 @@ from database.repositories.tech_ticket_repository import TechTicketRepository
 from database.repositories.ticket_fix_repository import TechFixRepository
 from database.repositories.workflow_execution_repository import WorkflowExecutionRepository
 from database.repositories.execution_step_repository import ExecutionStepRepository
+from database.repositories.approval_request_repository import ApprovalRequestRepository
