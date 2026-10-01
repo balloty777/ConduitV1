@@ -1,8 +1,9 @@
 from fastapi import APIRouter,Depends
 from sqlalchemy.orm import Session
 from api.dependencies import get_db
-from mcp_servers.servers.marketing.schemas import DraftContentOutput,DraftContentInput,GetContentInput,GetContentOutput,ScheduleContentInput,ScheduleContentOutput,UpdateContentInput,UpdateContentOutput,DeleteContentInput,DeleteContentOutput
+from mcp_servers.servers.marketing.schemas import DraftContentOutput,DraftContentInput,GetContentInput,GetContentOutput,ScheduleContentInput,ScheduleContentOutput,UpdateContentInput,UpdateContentOutput,DeleteContentInput,DeleteContentOutput,ApproveContentInput,ApproveContentOutput,RejectContentInput
 from services.marketing_service import MarketingService
+from services.approval_service import ApprovalService
 from uuid import UUID
 from datetime import datetime
 router= APIRouter(prefix="/marketing", tags=["Marketing"])
@@ -37,6 +38,22 @@ def schedule_content(content_id:UUID,data:ScheduleContentInput,db:Session=Depend
     service=MarketingService(db)
     result=service.schedule_content(content_id=content_id,scheduled_at=data.scheduled_at)
     return ScheduleContentOutput(content_id=result.id,execution_id=result.execution_id,platform=result.platform,status=result.status,scheduled_at=result.scheduled_at)
+
+@router.post("/content/{content_id}/approve",response_model=ApproveContentOutput)
+def approve_content(content_id:UUID,data:ApproveContentInput,user_id:UUID,db:Session=Depends(get_db)):
+    approval_service=ApprovalService(db)
+    marketing_service=MarketingService(db)
+    approval_request=approval_service.get_pending_by_subject_id(subject_id=content_id)
+    approval_service.approve(approval_request_id=approval_request.id,decided_by=user_id)
+    result=marketing_service.schedule_content(content_id=content_id,scheduled_at=data.scheduled_at)
+    return ApproveContentOutput(content_id=result.id,execution_id=result.execution_id,platform=result.platform,status=result.status,scheduled_at=result.scheduled_at)
+
+@router.post("/content/{content_id}/reject")
+def reject_content(content_id:UUID,data:RejectContentInput,user_id:UUID,db:Session=Depends(get_db)):
+    approval_service=ApprovalService(db)
+    approval_request=approval_service.get_pending_by_subject_id(subject_id=content_id)
+    rejection=approval_service.reject(approval_request_id=approval_request.id,decided_by=user_id,reason=data.reason)
+    return {"content_id":content_id,"approval_request_id":rejection.id,"status":rejection.status,"reason":rejection.reason}
 
 @router.delete("/content/{content_id}", status_code=204)
 def delete_content(content_id:UUID,db:Session=Depends(get_db)):

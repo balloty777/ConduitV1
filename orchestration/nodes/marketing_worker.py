@@ -9,12 +9,27 @@ from uuid import UUID
 
 def marketing_worker_node(state:State,db:Session)->State:
     llm=OpenAIService().llm
+    rejection_reason = state.get("rejection_reason")
     prompt = f"""
     Create the actual publishable LinkedIn marketing post for this request.
 
     User request:
     {state["request"]}
+    """
 
+    if rejection_reason:
+        prompt += f"""
+    
+    The previous draft was rejected.
+
+    Rejection feedback:
+    {rejection_reason}
+
+    Revise the content based on this feedback.
+    """
+
+    prompt += """
+    
     The `content` field must contain the finished LinkedIn post itself.
     Do not describe what the campaign should do.
     Do not provide instructions for another writer.
@@ -23,7 +38,6 @@ def marketing_worker_node(state:State,db:Session)->State:
 
     Return the structured fields required by MarketingDraft.
     """
-
     response = llm.with_structured_output(MarketingDraft).invoke(prompt)
     result = call_mcp_tool("draft_content",{"execution_id": str(state["execution_id"]),"brief": response.content,"platform": response.platform,"tone": response.tone,"audience": response.audience,"call_to_action": response.call_to_action})
     tool_data=json.loads(result[0]["text"])

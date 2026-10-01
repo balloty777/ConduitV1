@@ -15,10 +15,7 @@ def run_node(node_name: str,node_fn: Callable[..., State],state: State,db: Sessi
 
     step = service.create_step(execution_id=state["execution_id"],node=node_name,input_data=jsonable_encoder(dict(state)),parent_step_id=parent_step_id)
     try:
-        if node_name =="marketing_worker":
-            new_state=node_fn(state,db)
-        else:
-            new_state=node_fn(state)
+        new_state=node_fn(state,db)
         service.complete_step(step=step,output_data=jsonable_encoder(dict(new_state)))
         new_state["current_step_id"] = step.id
         return new_state

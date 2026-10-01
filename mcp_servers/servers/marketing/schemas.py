@@ -54,6 +54,20 @@ class ScheduleContentOutput(BaseModel):
     platform: str
     status: str
     scheduled_at: datetime | None
+
+class ApproveContentInput(BaseModel):
+    scheduled_at:datetime
+
+class ApproveContentOutput(BaseModel):
+    content_id:UUID
+    execution_id:UUID
+    platform:str
+    status:str
+    scheduled_at:datetime|None=None
+
+class RejectContentInput(BaseModel):
+    reason:str
+
 class DeleteContentInput(BaseModel):
     content_id: UUID
 class DeleteContentOutput(BaseModel):

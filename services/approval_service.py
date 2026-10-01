@@ -55,3 +55,8 @@ class ApprovalService:
         except Exception:
             self.db.rollback()
             raise
+    def get_pending_by_subject_id(self,subject_id:UUID)->ApprovalRequest:
+        approval_request=self.approval_repository.get_by_id(subject_id)
+        if approval_request is None:
+            raise ResourceNotFoundException("Pending approval request not found")
+            return approval_request

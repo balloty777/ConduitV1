@@ -1,5 +1,6 @@
 from orchestration.state import State
 from llm.jev_service import JevService
+from sqlalchemy.orm import Session
 
 DEPARTMENT_QUESTIONS={
     "department":{
@@ -13,7 +14,7 @@ DEPARTMENT_QUESTIONS={
     }
 }
 
-def router_node(state:State)->State:
+def router_node(state:State,db:Session)->State:
     jev=JevService()
     decision=jev.decide(state={"request":state["request"]},questions=DEPARTMENT_QUESTIONS)
     return {

@@ -12,7 +12,7 @@ class State(TypedDict):
     subject_type:str|None
     subject_id:UUID|None
     approval_request_id:UUID|None
-    approval_reason:str|None
+    rejection_reason:str|None
     output:str|None
     error:str|None
     
