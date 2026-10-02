@@ -50,7 +50,7 @@ class MarketingService:
         except Exception:
             self.db.rollback()
             raise
-    def schedule_content(self,content_id:UUID,scheduled_at:datetime)->MarketingContent:
+    def schedule_content(self,content_id:UUID,scheduled_at:datetime,commit:bool=True)->MarketingContent:
         marketing_content=self.get_content(content_id)
         if scheduled_at<=datetime.now(IST):
             raise InvalidStateTransitionException("The content can not be scheduled for the past")
@@ -60,7 +60,8 @@ class MarketingService:
         marketing_content.status="scheduled"
         try:
             result= self.repository.update(marketing_content)
-            self.db.commit()
+            if commit:
+                self.db.commit()
             self.db.refresh(result)
             return result
         except Exception:

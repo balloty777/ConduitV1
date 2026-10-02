@@ -12,7 +12,7 @@ class MarketingContentRepository:
     def get_by_id(self,content_id:UUID)->MarketingContent|None:
         return self.db.get(MarketingContent,content_id)
     def get_by_execution_id(self,execution_id:UUID)->MarketingContent|None:
-        return self.db.get(MarketingContent,execution_id)
+        return (self.db.query(MarketingContent).filter(MarketingContent.execution_id==execution_id).first())
     def update(self,marketing_content:MarketingContent)->MarketingContent:
         self.db.flush()
         return marketing_content

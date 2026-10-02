@@ -20,4 +20,4 @@ class TechFixRepository:
             return None
         else:
             self.db.delete(tech_fix)
-            self.db.flush
+            self.db.flush()

@@ -6,10 +6,10 @@ DEPARTMENT_QUESTIONS={
     "department":{
         "type":"choice",
         "instructions":"Which Conduit department should handle this request?",
-        "criteria":{
-            "marketing":"Marketing campaigns, content creation, audience entertainment , and promotional command",
-            "sales": "Leads,Lead creation, prospect lead, follow-ups with leads, and sales related activity.",
-            "tech": "All technical issue resolving,Technical tickets, bugs, fixes, and coding parts.",
+        "criteria": {
+            "marketing": "Requests involving marketing campaigns, content creation, promotional content, branding, or audience engagement.",
+            "sales": "Requests involving leads, lead creation, prospects, follow-ups, customer outreach, or other sales activities.",
+            "tech": "Requests involving technical issues, support tickets, bugs, debugging, fixes, software development, or coding."
         }
     }
 }

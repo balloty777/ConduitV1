@@ -75,7 +75,7 @@ class WorkflowExecutionService:
         if execution is None:
             raise ResourceNotFoundException(f"Workflow execution not found: {execution_id}")
         execution.status="completed"
-        if result is None:
+        if result is not None:
             execution.result=json.dumps(result,default=str)
         else:
             execution.result=None

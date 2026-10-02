@@ -1,5 +1,5 @@
 from orchestration.nodes.router import router_node
-
+from database.database import get_session
 
 state = {
     "request": "What are the sales lead currenly?",
@@ -16,8 +16,8 @@ state = {
     "output": None,
     "error": None,
 }
-
-result = router_node(state)
+with get_session() as db:
+    result = router_node(state,db)
 
 print("Workflow:", result["workflow"])
 print("Confidence:", result["confidence"])

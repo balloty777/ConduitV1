@@ -12,7 +12,7 @@ class SalesLeadRepository:
     def get_by_id(self,lead_id:UUID)->SalesLead|None:
         return self.db.get(SalesLead,lead_id)
     def get_by_execution_id(self,execution_id:UUID)->SalesLead|None:
-        return self.db.get(SalesLead,execution_id)
+        return self.db.query(SalesLead).filter(SalesLead.execution_id==execution_id).first()
     def get_by_email(self,email:str)->SalesLead|None:
         return self.db.query(SalesLead).filter(SalesLead.email==email).first()
     def update(self,sales_lead:SalesLead)->SalesLead:

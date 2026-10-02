@@ -21,7 +21,7 @@ class ApprovalService:
         except Exception:
             self.db.rollback()
             raise
-    def approve(self,approval_request_id:UUID,decided_by:UUID)->ApprovalRequest:
+    def approve(self,approval_request_id:UUID,decided_by:UUID,commit:bool=True)->ApprovalRequest:
         approval_request=self.approval_repository.get_by_id(approval_request_id)
         if approval_request is None:
             raise ResourceNotFoundException("Approval request not found")
@@ -32,7 +32,8 @@ class ApprovalService:
         approval_request.decided_at=datetime.now(IST)
         try:
             result=self.approval_repository.update(approval_request)
-            self.db.commit()
+            if commit:
+                self.db.commit()
             self.db.refresh(result)
             return result
         except Exception:
