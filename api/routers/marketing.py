@@ -3,7 +3,11 @@ from sqlalchemy.orm import Session
 from api.dependencies import get_db
 from mcp_servers.servers.marketing.schemas import DraftContentOutput,DraftContentInput,GetContentInput,GetContentOutput,ScheduleContentInput,ScheduleContentOutput,UpdateContentInput,UpdateContentOutput,DeleteContentInput,DeleteContentOutput,ApproveContentInput,ApproveContentOutput,RejectContentInput
 from services.marketing_service import MarketingService
+from services.workflow_execution_service import WorkflowExecutionService
 from services.approval_service import ApprovalService
+from exceptions.exceptions import InvalidStateTransitionException
+from langgraph.types import Command
+from orchestration.graph import build_graph 
 from uuid import UUID
 from datetime import datetime
 router= APIRouter(prefix="/marketing", tags=["Marketing"])
@@ -44,8 +48,12 @@ def approve_content(content_id:UUID,data:ApproveContentInput,user_id:UUID,db:Ses
     approval_service=ApprovalService(db)
     marketing_service=MarketingService(db)
     approval_request=approval_service.get_pending_by_subject_id(subject_id=content_id)
-    approval_service.approve(approval_request_id=approval_request.id,decided_by=user_id)
+    workflow_service=WorkflowExecutionService(db)
     result=marketing_service.schedule_content(content_id=content_id,scheduled_at=data.scheduled_at)
+    approval_service.approve(approval_request_id=approval_request.id,decided_by=user_id)
+    with build_graph(db) as graph:
+        final_state=graph.invoke(Command(resume={"decision":"approved"}),config={"configurable":{"thread_id":str(approval_request.execution_id)}})
+    workflow_service.complete_execution(execution_id=approval_request.execution_id,result=final_state)
     return ApproveContentOutput(content_id=result.id,execution_id=result.execution_id,platform=result.platform,status=result.status,scheduled_at=result.scheduled_at)
 
 @router.post("/content/{content_id}/reject")
@@ -53,6 +61,9 @@ def reject_content(content_id:UUID,data:RejectContentInput,user_id:UUID,db:Sessi
     approval_service=ApprovalService(db)
     approval_request=approval_service.get_pending_by_subject_id(subject_id=content_id)
     rejection=approval_service.reject(approval_request_id=approval_request.id,decided_by=user_id,reason=data.reason)
+    with build_graph(db) as graph:
+        result=graph.invoke(Command(resume={"decision":"rejected","reason":data.reason}),config={"configurable":{"thread_id":str(approval_request.execution_id)}})
+        print("RESUME RESULT",result)
     return {"content_id":content_id,"approval_request_id":rejection.id,"status":rejection.status,"reason":rejection.reason}
 
 @router.delete("/content/{content_id}", status_code=204)

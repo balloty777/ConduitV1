@@ -9,7 +9,7 @@ from services.workflow_execution_service import WorkflowExecutionService
 
 state = {
     "request": "Create a marketing campaign for our new product",
-    "user_id": UUID("e2360e81-0086-455f-8c01-ba0a47cca3ec"),
+    "user_id": UUID("5247c452-360f-4e4d-af2c-dce26bd59b48"),
     "execution_id": None,
     "current_step_id": None,
     "workflow": None,
@@ -19,7 +19,7 @@ state = {
     "subject_type": None,
     "subject_id": None,
     "approval_request_id": None,
-    "approval_reason": None,
+    "rejection_reason": None,
     "output": None,
     "error": None,
 }
@@ -34,3 +34,5 @@ with get_session() as db:
 
     print("Final state:")
     print(result)
+    print("\nExecution ID:")
+    print(state["execution_id"])

@@ -69,6 +69,19 @@ class WorkflowExecutionService:
         except Exception:
             self.db.rollback()
             raise
-
+    def complete_execution(self,execution_id:UUID,result:dict|None=None)->WorkflowExecution:
+        execution=self.workflow_execution_repository.get_by_id(execution_id)
+        if execution is None:
+            raise ResourceNotFoundException(f"Workflow execution not found: {execution_id}")
+        execution.status="completed"
+        execution.result=result
+        try:
+            self.workflow_execution_repository.update(execution)
+            self.db.commit()
+            self.db.refresh(execution)
+            return execution
+        except Exception:
+            self.db.rollback()
+            raise
 
 

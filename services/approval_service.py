@@ -47,6 +47,7 @@ class ApprovalService:
         approval_request.status="rejected"
         approval_request.decided_by=decided_by
         approval_request.decided_at=datetime.now(IST)
+        approval_request.reason=reason
         try:
             result=self.approval_repository.update(approval_request)
             self.db.commit()
@@ -55,8 +56,8 @@ class ApprovalService:
         except Exception:
             self.db.rollback()
             raise
-    def get_pending_by_subject_id(self,subject_id:UUID)->ApprovalRequest:
-        approval_request=self.approval_repository.get_by_id(subject_id)
+    def get_pending_by_subject_id(self, subject_id: UUID) -> ApprovalRequest:
+        approval_request = self.approval_repository.get_by_subject_id(subject_id)
         if approval_request is None:
             raise ResourceNotFoundException("Pending approval request not found")
-            return approval_request
+        return approval_request

@@ -57,7 +57,7 @@ class MarketingService:
         if marketing_content.status!="draft":
             raise InvalidStateTransitionException(f"Cannot schedule content with status :  {marketing_content.status}")
         marketing_content.scheduled_at=scheduled_at
-        marketing_content.status="pending_approval"
+        marketing_content.status="scheduled"
         try:
             result= self.repository.update(marketing_content)
             self.db.commit()

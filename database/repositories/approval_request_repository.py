@@ -16,4 +16,3 @@ class ApprovalRequestRepository:
         return approval_request
     def get_by_subject_id(self,subject_id:UUID)->ApprovalRequest|None:
         return(self.db.query(ApprovalRequest).filter(ApprovalRequest.subject_id==subject_id).filter(ApprovalRequest.status=="pending").first())
-    

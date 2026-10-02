@@ -29,10 +29,13 @@ def build_graph(db:Session):
         if state["status"]=="failed":
             return "failed"
         return state["workflow"]
-    
     graph.add_conditional_edges("router",route_department,{"marketing":"marketing_worker","failed":END})
     graph.add_edge("marketing_worker","approval_wait")
-    graph.add_edge("approval_wait",END)
+    def route_after_approval(state:State)->str:
+        if state.get("rejection_reason"):
+            return "rejected"
+        return "approved"
+    graph.add_conditional_edges("approval_wait",route_after_approval,{"rejected":"marketing_worker","approved":END})
 
 
     with get_checkpointer() as checkpointer:
