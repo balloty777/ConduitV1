@@ -5,6 +5,7 @@ from database.models.execution_steps import ExecutionStep
 from database.repositories.workflow_execution_repository import WorkflowExecutionRepository
 from database.repositories.execution_step_repository import ExecutionStepRepository
 from exceptions.exceptions import ResourceNotFoundException
+import json
 from zoneinfo import ZoneInfo
 IST = ZoneInfo("Asia/Kolkata")
 
@@ -74,7 +75,10 @@ class WorkflowExecutionService:
         if execution is None:
             raise ResourceNotFoundException(f"Workflow execution not found: {execution_id}")
         execution.status="completed"
-        execution.result=result
+        if result is None:
+            execution.result=json.dumps(result,default=str)
+        else:
+            execution.result=None
         try:
             self.workflow_execution_repository.update(execution)
             self.db.commit()
