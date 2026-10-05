@@ -27,6 +27,26 @@ class SalesService:
         except Exception:
             self.db.rollback()
             raise
+    def update_lead(self,lead_id:UUID,execution_id:UUID,name:str,email:str,phone:str|None=None)->SalesLead:
+        lead=self.salesleadrepository.get_by_id(lead_id)
+        if lead is None:
+            raise ResourceNotFoundException(f"Lead id {lead_id} does not exist")
+        existing_lead=self.salesleadrepository.get_by_email(email)
+        if existing_lead is not None and existing_lead.id !=lead_id:
+            raise ResourceAlreadyExist(f"Lead with {existing_lead.email} is already present")
+        lead.execution_id=execution_id
+        lead.name=name
+        lead.email=email
+        if phone is not None:
+            lead.phone=phone
+        try:
+            self.salesleadrepository.update(lead)
+            self.db.commit()
+            self.db.refresh(lead)
+            return lead
+        except Exception:
+            self.db.rollback()
+            raise
     def delete_lead(self,lead_id:UUID)->None:
         lead=self.salesleadrepository.get_by_id(lead_id)
         if lead is None:

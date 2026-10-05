@@ -19,6 +19,20 @@ class DeleteLeadInput(BaseModel):
 class DeleteLeadOutput(BaseModel):
     lead_id: UUID
     deleted: bool
+
+class UpdateLeadInput(BaseModel):
+    lead_id:UUID
+    name:str
+    email:str
+    phone:str|None=None
+
+class UpdateLeadOutput(BaseModel):
+    lead_id:UUID
+    execution_id:UUID
+    name:str
+    email:str
+    phone:str|None=None
+    status:str
 class FollowUpLeadInput(BaseModel):
     lead_id:UUID
     execution_id:UUID

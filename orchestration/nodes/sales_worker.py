@@ -10,6 +10,7 @@ import json
 def sales_worker_node(state:State,db:Session)->State:
     llm=OpenAIService().llm
     rejection_reason = state.get("rejection_reason")
+    target_id=state.get("target_id")
     prompt = f"""
     Extract the sales lead information from the user's request.
 
@@ -19,7 +20,7 @@ def sales_worker_node(state:State,db:Session)->State:
 
     if rejection_reason:
         prompt += f"""
-        
+
     The previous Sales action was rejected.
 
     Rejection feedback:
@@ -29,33 +30,38 @@ def sales_worker_node(state:State,db:Session)->State:
     """
 
     prompt += """
+    
     Return the structured fields required by SalesLeadDraft.
     """
-
     response=llm.with_structured_output(SalesLeadDraft).invoke(prompt)
-    result=call_mcp_tool("create_lead",{"execution_id":str(state["execution_id"]),"name":response.name,"email":response.email,"phone":response.phone},"sales")
+    if rejection_reason and target_id:
+        result=call_mcp_tool("update_lead",{"lead_id": str(target_id),"execution_id": str(state["execution_id"]),"name": response.name,"email": response.email,"phone": response.phone},"sales")
+    else:
+        result=call_mcp_tool("create_lead",{"execution_id":str(state["execution_id"]),"name":response.name,"email":response.email,"phone":response.phone},"sales")
     tool_data=json.loads(result[0]["text"])
     approval_service=ApprovalService(db)
     approval_request=approval_service.create_pending(subject_type="sales_lead",subject_id=UUID(tool_data["lead_id"]),execution_id=state["execution_id"])
-    return {**state,"current_node":"sales_worker","output":tool_data,"subject_type":"sales_lead","approval_request_id":approval_request.id,"subject_id":UUID(tool_data["lead_id"]),"status":"running"}
+    return {**state,"current_node":"sales_worker","output":tool_data,"subject_type":"sales_lead","approval_request_id":approval_request.id,"subject_id":UUID(tool_data["lead_id"]),"target_id":UUID(tool_data["lead_id"]),"status":"running"}
 
 def sales_follow_up_worker_node(state:State,db:Session)->State:
     llm=OpenAIService().llm
     rejection_reason=state.get("rejection_reason")
-    lead_id=state.get("subject_id")
+    target_id=state.get("target_id")
     prompt = f"""
     Create a concise sales follow-up message for the existing lead.
 
     User request:
     {state["request"]}
+    """
 
-    Lead ID:
-    {lead_id}
+    if target_id:
+        prompt += f"""
+    Existing lead ID:
+    {target_id}
     """
 
     if rejection_reason:
         prompt += f"""
-        
     The previous follow-up was rejected.
 
     Rejection feedback:
@@ -65,15 +71,17 @@ def sales_follow_up_worker_node(state:State,db:Session)->State:
     """
 
     prompt += """
-    
     Return:
+    - lead_id
     - message
     - channel
     - scheduled_at
     """
     response=llm.with_structured_output(SalesFollowUpDraft).invoke(prompt)
+    lead_id=target_id or response.lead_id
     result=call_mcp_tool("follow_up_lead",{"lead_id":str(lead_id),"execution_id":str(state["execution_id"]),"message":response.message,"channel":response.channel,"scheduled_at":response.scheduled_at},"sales")
     tool_data=json.loads(result[0]["text"])
     approval_service=ApprovalService(db)
     approval_request=approval_service.create_pending(subject_id=UUID(tool_data["follow_up_id"]),subject_type="sales_follow_up",execution_id=state["execution_id"])
-    return {**state,"current_node":"sales_follow_up_worker","status":"running","output":tool_data,"subject_type":"sales_follow_up","approval_request_id":approval_request.id,"subject_id":UUID(tool_data["follow_up_id"])}
+    return {**state,"current_node":"sales_follow_up_worker","status":"running","output":tool_data,"subject_type":"sales_follow_up","approval_request_id":approval_request.id,"subject_id":UUID(tool_data["follow_up_id"]),"target_id":lead_id}
+    

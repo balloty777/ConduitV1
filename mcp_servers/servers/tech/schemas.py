@@ -30,6 +30,23 @@ class TicketFixOutput(BaseModel):
     execution_id: UUID
     proposed_fix: str
     status: str
+
+class UpdateTicketInput(BaseModel):
+    ticket_id:UUID
+    execution_id:UUID
+    title:str
+    category:str
+    description:str
+    priority:str
+
+class UpdateTicketOutput:
+    ticket_id:UUID
+    execution_id:UUID
+    title:str
+    category:str
+    description:str
+    priority:str
+    status:str
 class DeleteTicketFixInput(BaseModel):
     fix_id: UUID
 class DeleteTicketFixOutput(BaseModel):

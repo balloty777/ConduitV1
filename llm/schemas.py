@@ -1,6 +1,7 @@
 from pydantic import BaseModel,Field
 from typing import Literal
 from datetime import datetime
+from uuid import UUID
 class JevDepartmentDecision(BaseModel):
     choice:str
     probabilities: dict[str, float]
@@ -19,6 +20,7 @@ class SalesLeadDraft(BaseModel):
     phone:str|None=Field(default=None,max_length=30)
 
 class SalesFollowUpDraft(BaseModel):
+    lead_id:UUID
     message:str
     channel:str
     scheduled_at:datetime|None=None
@@ -28,3 +30,7 @@ class TechTicketDraft(BaseModel):
     category:str
     description:str
     priority:str
+
+class TechTicketFixDraft(BaseModel):
+    ticket_id:UUID
+    proposed_fix:str

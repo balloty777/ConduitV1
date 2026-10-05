@@ -47,6 +47,23 @@ class TechService:
         except Exception:
             self.db.rollback()
             raise
+    def update_ticket(self,ticket_id:UUID,execution_id:UUID,title:str,category:str,description:str,priority:str):
+        ticket=self.techticketrepository.get_by_id(ticket_id)
+        if ticket is None:
+            raise ResourceNotFoundException(f"Ticket id {ticket_id} does not exist")
+        ticket.execution_id=execution_id
+        ticket.title=title
+        ticket.category=category
+        ticket.description=description
+        ticket.priority=priority
+        try:
+            self.techticketrepository.update(ticket)
+            self.db.commit()
+            self.db.refresh(ticket)
+            return ticket
+        except Exception:
+            self.db.rollback()
+            raise
     def delete_ticket_fix(self,fix_id:UUID)->None:
         fix=self.techfixrepository.get_by_id(fix_id)
         if fix is None:
