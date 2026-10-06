@@ -27,6 +27,11 @@ class SalesService:
         except Exception:
             self.db.rollback()
             raise
+    def get_lead(self,lead_id:UUID)->SalesLead:
+        lead=self.salesleadrepository.get_by_id(lead_id)
+        if lead is None:
+            raise ResourceNotFoundException(f"Lead id {lead_id} does not exist")
+        return lead
     def update_lead(self,lead_id:UUID,execution_id:UUID,name:str,email:str,phone:str|None=None)->SalesLead:
         lead=self.salesleadrepository.get_by_id(lead_id)
         if lead is None:

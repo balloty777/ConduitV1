@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from orchestration.state import State
 from llm.jev_service import JevService
+from services.sales_service import SalesService
 from services.tech_service import TechService
 
 
@@ -66,10 +67,30 @@ TICKET_ID_PATTERN = re.compile(
     -[0-9a-fA-F]{12})
     \b
     """,re.IGNORECASE | re.VERBOSE)
+LEAD_ID_PATTERN = re.compile(
+    r"""
+    \b
+    lead
+    (?:\s+id|\s*_id)?
+    \s*(?:is|=|:)?\s*
+    ([0-9a-fA-F]{8}
+    -[0-9a-fA-F]{4}
+    -[0-9a-fA-F]{4}
+    -[0-9a-fA-F]{4}
+    -[0-9a-fA-F]{12})
+    \b
+    """,re.IGNORECASE | re.VERBOSE)
 
 
 def extract_ticket_id(request: str) -> UUID | None:
     match = TICKET_ID_PATTERN.search(request)
+    if not match:
+        return None
+    return UUID(match.group(1))
+
+
+def extract_lead_id(request: str) -> UUID | None:
+    match = LEAD_ID_PATTERN.search(request)
     if not match:
         return None
     return UUID(match.group(1))
@@ -85,4 +106,10 @@ def router_node(state: State, db: Session) -> State:
             raise ValueError("An existing ticket ID is required to create a technical ticket fix")
         tech_service = TechService(db)
         tech_service.get_ticket(target_id)
+    elif action == "follow_up_lead":
+        target_id = extract_lead_id(state["request"]) or target_id
+        if target_id is None:
+            raise ValueError("An existing lead ID is required to create a sales follow-up")
+        sales_service = SalesService(db)
+        sales_service.get_lead(target_id)
     return {**state,"workflow": workflow,"action": action,"confidence": decision.confidence,"current_node": "router","status": "running","target_id": target_id}

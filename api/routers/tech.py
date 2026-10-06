@@ -10,8 +10,8 @@ router = APIRouter(prefix="/tech",tags=["Tech"])
 @router.post("/tickets",response_model=CreateTicketOutput,status_code=status.HTTP_201_CREATED)
 def create_ticket(data:CreateTicketInput,db:Session=Depends(get_db)):
     service=TechService(db)
-    ticket=service.create_ticket(execution_id=data.execution_id,title=data.title,category=data.category,description=data.description,priority=data.priority)
-    return CreateTicketOutput(ticket_id=ticket.id,execution_id=ticket.execution_id,title=ticket.title,category=ticket.category,description=ticket.description,priority=ticket.priority,status=ticket.status)
+    ticket=service.create_ticket(execution_id=data.execution_id,title=data.title,category=data.category,description=data.description,proposed_fix=data.proposed_fix,priority=data.priority)
+    return CreateTicketOutput(ticket_id=ticket.id,execution_id=ticket.execution_id,title=ticket.title,category=ticket.category,description=ticket.description,proposed_fix=ticket.proposed_fix,priority=ticket.priority,status=ticket.status)
 
 @router.delete("/tickets/{ticket_id}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_ticket(ticket_id:UUID,db:Session=Depends(get_db)):
