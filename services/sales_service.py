@@ -57,7 +57,7 @@ class SalesService:
         except Exception:
             self.db.rollback()
             raise
-    def follow_up_lead(self,lead_id:UUID,execution_id:UUID,message:str,channel:str,scheduled_at:datetime|None=None)->SalesFollowUp:
+    def follow_up_lead(self,lead_id:UUID,execution_id:UUID,message:str,channel:str)->SalesFollowUp:
         lead=self.salesleadrepository.get_by_id(lead_id)
         if lead is None:
             raise ResourceNotFoundException(f"Lead id {lead_id} does not exist")
@@ -66,10 +66,27 @@ class SalesService:
             execution_id=execution_id,
             message=message,
             channel=channel,
-            scheduled_at=scheduled_at
+            scheduled_at=None
         )
         try:
             result=self.salesfollowuprepository.create(follow_up)
+            self.db.commit()
+            self.db.refresh(result)
+            return result
+        except Exception:
+            self.db.rollback()
+            raise
+    def schedule_follow_up(self,follow_up_id:UUID,scheduled_at:datetime)->SalesFollowUp:
+        follow_up=self.salesfollowuprepository.get_by_id(follow_up_id)
+        if follow_up is None:
+            raise ResourceNotFoundException(f"Follow up id {follow_up_id} does not exist")
+        if follow_up.scheduled_at is not None:
+            raise InvalidStateTransitionException(f"Follow up is already scheduled")
+        if scheduled_at<=datetime.now(IST):
+            raise InvalidStateTransitionException("The follow-up cannot be scheduled for the past")
+        follow_up.scheduled_at=scheduled_at
+        try:
+            result=self.salesfollowuprepository.update(follow_up)
             self.db.commit()
             self.db.refresh(result)
             return result

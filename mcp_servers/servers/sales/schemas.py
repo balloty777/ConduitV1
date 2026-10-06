@@ -47,6 +47,18 @@ class FollowUpLeadOutput(BaseModel):
     channel:str
     status:str
     scheduled_at: datetime | None=None
+
+class ScheduleFollowUpInput(BaseModel):
+    scheduled_at:datetime
+
+class ScheduleFollowUpOutput(BaseModel):
+    follow_up_id: UUID
+    lead_id: UUID
+    execution_id: UUID
+    message: str
+    channel: str
+    status: str
+    scheduled_at: datetime
 class DeleteFollowUpInput(BaseModel):
     follow_up_id: UUID
 class DeleteFollowUpOutput(BaseModel):

@@ -2,6 +2,7 @@ from fastapi import APIRouter,Depends
 from sqlalchemy.orm import Session
 from api.dependencies import get_db
 from mcp_servers.servers.marketing.schemas import DraftContentOutput,DraftContentInput,GetContentInput,GetContentOutput,ScheduleContentInput,ScheduleContentOutput,UpdateContentInput,UpdateContentOutput,DeleteContentInput,DeleteContentOutput,ApproveContentInput,ApproveContentOutput,RejectContentInput
+from services.approval_service import ApprovalService
 from services.marketing_service import MarketingService
 from services.workflow_execution_service import WorkflowExecutionService
 from services.approval_service import ApprovalService
@@ -39,32 +40,15 @@ def update_content(content_id:UUID,data:UpdateContentInput,db:Session=Depends(ge
 
 @router.post( "/content/{content_id}/schedule",response_model=ScheduleContentOutput)
 def schedule_content(content_id:UUID,data:ScheduleContentInput,db:Session=Depends(get_db)):
-    service=MarketingService(db)
-    result=service.schedule_content(content_id=content_id,scheduled_at=data.scheduled_at)
-    return ScheduleContentOutput(content_id=result.id,execution_id=result.execution_id,platform=result.platform,status=result.status,scheduled_at=result.scheduled_at)
-
-@router.post("/content/{content_id}/approve",response_model=ApproveContentOutput)
-def approve_content(content_id:UUID,data:ApproveContentInput,user_id:UUID,db:Session=Depends(get_db)):
-    approval_service=ApprovalService(db)
     marketing_service=MarketingService(db)
-    approval_request=approval_service.get_pending_by_subject_id(subject_id=content_id)
     workflow_service=WorkflowExecutionService(db)
-    result=marketing_service.schedule_content(content_id=content_id,scheduled_at=data.scheduled_at,commit=False)
-    approval_service.approve(approval_request_id=approval_request.id,decided_by=user_id,commit=False)
-    db.commit()
-    with build_graph(db) as graph:
-        final_state=graph.invoke(Command(resume={"decision":"approved"}),config={"configurable":{"thread_id":str(approval_request.execution_id)}})
-    workflow_service.complete_execution(execution_id=approval_request.execution_id,result=final_state)
-    return ApproveContentOutput(content_id=result.id,execution_id=result.execution_id,platform=result.platform,status=result.status,scheduled_at=result.scheduled_at)
-
-@router.post("/content/{content_id}/reject")
-def reject_content(content_id:UUID,data:RejectContentInput,user_id:UUID,db:Session=Depends(get_db)):
     approval_service=ApprovalService(db)
-    approval_request=approval_service.get_pending_by_subject_id(subject_id=content_id)
-    rejection=approval_service.reject(approval_request_id=approval_request.id,decided_by=user_id,reason=data.reason)
-    with build_graph(db) as graph:
-        result=graph.invoke(Command(resume={"decision":"rejected","reason":data.reason}),config={"configurable":{"thread_id":str(approval_request.execution_id)}})
-    return {"content_id":result["subject_id"],"approval_request_id":result["approval_request_id"],"status":"pending","reason":rejection.reason}
+    approval_request=approval_service.get_by_subject_id(subject_id=content_id)
+    if approval_request.status !="approved":
+        raise InvalidStateTransitionException("marketing content must be approved before scheduling")
+    result=marketing_service.schedule_content(content_id=content_id,scheduled_at=data.scheduled_at)
+    workflow_service.complete_execution(execution_id=result.execution_id,result={"content_id": str(result.id),"status": result.status,"scheduled_at": result.scheduled_at.isoformat()}) 
+    return ScheduleContentOutput(content_id=result.id,execution_id=result.execution_id,platform=result.platform,status=result.status,scheduled_at=result.scheduled_at)
 
 @router.delete("/content/{content_id}", status_code=204)
 def delete_content(content_id:UUID,db:Session=Depends(get_db)):

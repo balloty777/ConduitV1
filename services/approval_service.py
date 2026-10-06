@@ -62,4 +62,8 @@ class ApprovalService:
         if approval_request is None:
             raise ResourceNotFoundException("Pending approval request not found")
         return approval_request
-            
+    def get_by_subject_id(self,subject_id:UUID)->ApprovalRequest:
+        approval_request=self.approval_repository.get_by_subject_id_any_status(subject_id)
+        if approval_request is None:
+            raise ResourceNotFoundException(f"Approval request not found")
+        return approval_request

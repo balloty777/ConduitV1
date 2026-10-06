@@ -18,7 +18,7 @@ def follow_up_lead(data:FollowUpLeadInput)->FollowUpLeadOutput:
     """ Create a follow up for sales lead """
     with get_session() as db:
         service=SalesService(db)
-        follow_up=service.follow_up_lead(lead_id=data.lead_id,execution_id=data.execution_id,message=data.message,channel=data.channel,scheduled_at=data.scheduled_at)
+        follow_up=service.follow_up_lead(lead_id=data.lead_id,execution_id=data.execution_id,message=data.message,channel=data.channel)
         return FollowUpLeadOutput(follow_up_id=follow_up.id,lead_id=follow_up.lead_id,execution_id=follow_up.execution_id,message=follow_up.message,channel=follow_up.channel,status=follow_up.status,scheduled_at=follow_up.scheduled_at)
 
 @mcp.tool()

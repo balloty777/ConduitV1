@@ -75,11 +75,10 @@ def sales_follow_up_worker_node(state:State,db:Session)->State:
     - lead_id
     - message
     - channel
-    - scheduled_at
     """
     response=llm.with_structured_output(SalesFollowUpDraft).invoke(prompt)
     lead_id=target_id or response.lead_id
-    result=call_mcp_tool("follow_up_lead",{"lead_id":str(lead_id),"execution_id":str(state["execution_id"]),"message":response.message,"channel":response.channel,"scheduled_at":response.scheduled_at},"sales")
+    result=call_mcp_tool("follow_up_lead",{"lead_id":str(lead_id),"execution_id":str(state["execution_id"]),"message":response.message,"channel":response.channel},"sales")
     tool_data=json.loads(result[0]["text"])
     approval_service=ApprovalService(db)
     approval_request=approval_service.create_pending(subject_id=UUID(tool_data["follow_up_id"]),subject_type="sales_follow_up",execution_id=state["execution_id"])

@@ -8,7 +8,7 @@ from langgraph.types import Command
 from orchestration.graph import build_graph
 from services.approval_service import ApprovalService
 
-router=APIRouter(prefix="/approvals",tags=["Approvals"])
+router=APIRouter(prefix="/approvals",tags=["Approvals"])    
 
 @router.post("/{approval_request_id}/approve",response_model=ApprovalResponse)
 def approve_approval(approval_request_id:UUID,data:ApproveApprovalRequest,db:Session=Depends(get_db)):
@@ -20,6 +20,7 @@ def approve_approval(approval_request_id:UUID,data:ApproveApprovalRequest,db:Ses
             Command(resume={"decision":"approved"}),
             config={"configurable": {"thread_id": str(approval_request.execution_id)}}
         )
+    if approval_request.subject_type not in {"marketing_content","sales_follow_up"}:
         workflow_service.complete_execution(execution_id=approval_request.execution_id,result=final_state)
     return ApprovalResponse(approval_request_id=approval_request.id,execution_id=approval_request.execution_id,subject_type=approval_request.subject_type,subject_id=approval_request.subject_id,status=approval_request.status,reason=approval_request.reason,decided_by=approval_request.decided_by)
 

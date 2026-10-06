@@ -23,7 +23,6 @@ class SalesFollowUpDraft(BaseModel):
     lead_id:UUID
     message:str
     channel:str
-    scheduled_at:datetime|None=None
 
 class TechTicketDraft(BaseModel):
     title:str
