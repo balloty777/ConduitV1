@@ -44,7 +44,11 @@ def build_graph(db:Session):
     
     def route_after_approval(state:State)->str:
         if state.get("rejection_reason"):
+            if state.get("subject_type") == "tech_ticket_fix":
+                return "create_ticket_fix"
             return state["action"]
+        if state.get("subject_type") == "tech_ticket":
+            return "create_ticket_fix"
         return "approved"
     graph.add_conditional_edges("approval_wait",route_after_approval,{"create_content":"marketing_worker","create_lead":"sales_worker","follow_up_lead":"sales_follow_up_worker","create_ticket":"tech_worker","create_ticket_fix":"tech_fix_worker","approved":END})
 

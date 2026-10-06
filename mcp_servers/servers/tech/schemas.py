@@ -91,6 +91,18 @@ class GetTicketOutput(BaseModel):
     priority: str
     status: str
 
+
+class GetTicketFixInput(BaseModel):
+    fix_id: UUID
+
+
+class GetTicketFixOutput(BaseModel):
+    fix_id: UUID
+    ticket_id: UUID
+    execution_id: UUID
+    proposed_fix: str
+    status: str
+
 class DeleteTicketFixInput(BaseModel):
     fix_id: UUID
 

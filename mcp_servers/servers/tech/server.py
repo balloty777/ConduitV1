@@ -1,7 +1,7 @@
 from mcp.server.fastmcp import FastMCP
 from database.database import get_session
 from services.tech_service import TechService
-from mcp_servers.servers.tech.schemas import CreateTicketInput,CreateTicketOutput,TicketFixInput,TicketFixOutput,UpdateTicketInput,UpdateTicketOutput,UpdateTicketFixInput,UpdateTicketFixOutput,GetTicketInput,GetTicketOutput
+from mcp_servers.servers.tech.schemas import CreateTicketInput,CreateTicketOutput,TicketFixInput,TicketFixOutput,UpdateTicketInput,UpdateTicketOutput,UpdateTicketFixInput,UpdateTicketFixOutput,GetTicketInput,GetTicketOutput,GetTicketFixInput,GetTicketFixOutput
 
 mcp=FastMCP("tech") 
 
@@ -43,6 +43,14 @@ def get_ticket(data:GetTicketInput)->GetTicketOutput:
         service=TechService(db)
         ticket=service.get_ticket(ticket_id=data.ticket_id)
         return GetTicketOutput(ticket_id=ticket.id,execution_id=ticket.execution_id,title=ticket.title,category=ticket.category,description=ticket.description,proposed_fix=ticket.proposed_fix,priority=ticket.priority,status=ticket.status)
+
+@mcp.tool()
+def get_ticket_fix(data:GetTicketFixInput)->GetTicketFixOutput:
+    """Get an existing proposed fix for a technical ticket"""
+    with get_session() as db:
+        service=TechService(db)
+        fix=service.get_ticket_fix(fix_id=data.fix_id)
+        return GetTicketFixOutput(fix_id=fix.id,ticket_id=fix.ticket_id,execution_id=fix.execution_id,proposed_fix=fix.proposed_fix,status=fix.status)
 
 if __name__=="__main__":
     mcp.run()

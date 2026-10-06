@@ -56,6 +56,10 @@ def tech_fix_worker_node(state:State,db:Session)->State:
         raise ValueError("target id is required to create a technical ticket fix")
     ticket_result=call_mcp_tool("get_ticket",{"ticket_id":str(ticket_id)},"tech")
     ticket_data=json.loads(ticket_result[0]["text"])
+    previous_fix = None
+    if rejection_reason and existing_fix_id:
+        fix_result=call_mcp_tool("get_ticket_fix",{"fix_id":str(existing_fix_id)},"tech")
+        previous_fix=json.loads(fix_result[0]["text"])["proposed_fix"]
     prompt = f"""
     Generate the corrected code for an existing technical support ticket.
 
@@ -76,7 +80,8 @@ def tech_fix_worker_node(state:State,db:Session)->State:
     if rejection_reason:
         prompt += f"""
 
-    The previous fix was rejected.
+    The previous generated code fix was rejected:
+    {previous_fix}
 
     Rejection feedback:
     {rejection_reason}
