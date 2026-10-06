@@ -58,7 +58,6 @@ class ScheduleFollowUpOutput(BaseModel):
     message: str
     channel: str
     status: str
-    scheduled_at: datetime
 class DeleteFollowUpInput(BaseModel):
     follow_up_id: UUID
 class DeleteFollowUpOutput(BaseModel):
