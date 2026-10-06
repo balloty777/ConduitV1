@@ -39,16 +39,12 @@ def marketing_worker_node(state:State,db:Session)->State:
     Return the structured fields required by MarketingDraft.
     """
     response = llm.with_structured_output(MarketingDraft).invoke(prompt)
-    result = call_mcp_tool("draft_content",{"execution_id": str(state["execution_id"]),"brief": response.content,"platform": response.platform,"tone": response.tone,"audience": response.audience,"call_to_action": response.call_to_action},"marketing")
-    tool_data=json.loads(result[0]["text"])
-    approval_service=ApprovalService(db)
-    approval_request=approval_service.create_pending(subject_type="marketing_content",subject_id=UUID(tool_data["content_id"]),execution_id=state["execution_id"])
-    return {
-        **state,
-        "current_node":"marketing_worker",
-        "status":"running",
-        "output":tool_data,
-        "subject_type":"marketing_content",
-        "approval_request_id":approval_request.id,
-        "subject_id":UUID(tool_data["content_id"])
-    }
+    target_id = state.get("target_id")
+    if rejection_reason and target_id:
+        result = call_mcp_tool("update_content",{"content_id": str(target_id),"execution_id": str(state["execution_id"]),"brief": response.content,"platform": response.platform,"tone": response.tone,"audience": response.audience,"call_to_action": response.call_to_action,},"marketing")
+    else:
+        result = call_mcp_tool("draft_content",{"execution_id": str(state["execution_id"]),"brief": response.content,"platform": response.platform,"tone": response.tone,"audience": response.audience,"call_to_action": response.call_to_action},"marketing")
+    tool_data = json.loads(result[0]["text"])
+    approval_service = ApprovalService(db)
+    approval_request = approval_service.create_pending(subject_type="marketing_content",subject_id=UUID(tool_data["content_id"]),execution_id=state["execution_id"])
+    return {**state,"current_node": "marketing_worker","status": "running","output": tool_data,"subject_type": "marketing_content","approval_request_id": approval_request.id,"subject_id": UUID(tool_data["content_id"]),"target_id": UUID(tool_data["content_id"])}

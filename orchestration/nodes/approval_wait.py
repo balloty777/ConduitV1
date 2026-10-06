@@ -12,4 +12,4 @@ def approval_wait_node(state:State,db:Session)->State:
     })
     if decision["decision"]=="rejected":
         return{**state,"current_node":"approval_wait","rejection_reason":decision["reason"],"status":"running","error":None}
-    return {**state,"current_node":"approval_wait","error": None,"rejection_reason": None,"status":"completed","error":None}
+    return {**state,"current_node":"approval_wait","rejection_reason": None,"status":"completed","error":None}

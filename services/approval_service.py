@@ -62,3 +62,4 @@ class ApprovalService:
         if approval_request is None:
             raise ResourceNotFoundException("Pending approval request not found")
         return approval_request
+            
