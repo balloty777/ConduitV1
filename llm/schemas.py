@@ -29,8 +29,12 @@ class TechTicketDraft(BaseModel):
     title:str
     category:str
     description:str
+    proposed_fix:str
     priority:str
 
 class TechTicketFixDraft(BaseModel):
-    ticket_id:UUID
-    proposed_fix:str
+    fixed_code:str
+
+class JevDecision(BaseModel):
+    choice:str
+    confidence:float

@@ -20,12 +20,18 @@ ROUTING_QUESTIONS = {
                 "or reach out to an existing lead or prospect."
             ),
             "tech_create_ticket": (
-                "Technical requests involving a new issue, bug, support "
-                "request, incident, or problem that should become a ticket."
+                "Technical requests involving a new issue, bug, support request, "
+                "incident, code problem, error, or problem that should become a "
+                "new Conduit ticket. Use this when no existing Conduit ticket is "
+                "clearly identified."
             ),
             "tech_create_ticket_fix": (
-                "Technical requests asking to propose, create, or apply a "
-                "fix or solution for an existing technical ticket or issue."
+                "Technical requests asking to propose a fix or solution for an "
+                "existing support ticket. Use this only when the request clearly "
+                "refers to an existing ticket, preferably by ticket ID or explicit "
+                "reference to a previously created ticket. Do not use this for a "
+                "new bug report, code problem, error report, or issue that has not "
+                "already been turned into a Conduit ticket."
             ),
         },
     }

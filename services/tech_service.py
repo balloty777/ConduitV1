@@ -14,8 +14,8 @@ class TechService:
         self.db=db
         self.techticketrepository=TechTicketRepository(db)
         self.techfixrepository=TechFixRepository(db)
-    def create_ticket(self,execution_id:UUID,title:str,category:str,description:str,priority:str)->TechTicket:
-        ticket=TechTicket(execution_id=execution_id,title=title,category=category,description=description,priority=priority)
+    def create_ticket(self,execution_id:UUID,title:str,category:str,description:str,proposed_fix:str,priority:str)->TechTicket:
+        ticket=TechTicket(execution_id=execution_id,title=title,category=category,description=description,proposed_fix=proposed_fix,priority=priority)
         try:
             result=self.techticketrepository.create(ticket)
             self.db.commit()
@@ -24,6 +24,11 @@ class TechService:
         except Exception:
             self.db.rollback()
             raise
+    def get_ticket(self,ticket_id:UUID)->TechTicket:
+        ticket=self.techticketrepository.get_by_id(ticket_id=ticket_id)
+        if ticket is None:
+            raise ResourceNotFoundException(f"Ticket id {ticket_id} does not exist")
+        return ticket
     def delete_ticket(self,ticket_id:UUID)->None:
         lead=self.techticketrepository.get_by_id(ticket_id)
         if lead is None:
@@ -47,7 +52,7 @@ class TechService:
         except Exception:
             self.db.rollback()
             raise
-    def update_ticket(self,ticket_id:UUID,execution_id:UUID,title:str,category:str,description:str,priority:str):
+    def update_ticket(self,ticket_id:UUID,execution_id:UUID,title:str,category:str,description:str,proposed_fix:str,priority:str):
         ticket=self.techticketrepository.get_by_id(ticket_id)
         if ticket is None:
             raise ResourceNotFoundException(f"Ticket id {ticket_id} does not exist")
@@ -55,12 +60,27 @@ class TechService:
         ticket.title=title
         ticket.category=category
         ticket.description=description
+        ticket.proposed_fix=proposed_fix
         ticket.priority=priority
         try:
             self.techticketrepository.update(ticket)
             self.db.commit()
             self.db.refresh(ticket)
             return ticket
+        except Exception:
+            self.db.rollback()
+            raise
+    def update_ticket_fix(self,fix_id:UUID,execution_id:UUID,proposed_fix:str):
+        fix=self.techfixrepository.get_by_id(fix_id)
+        if fix is None:
+            raise ResourceNotFoundException(f"Ticket fix id {fix_id} does not exist")
+        fix.execution_id=execution_id
+        fix.proposed_fix=proposed_fix
+        try:
+            self.techfixrepository.update(fix)
+            self.db.commit()
+            self.db.refresh(fix)
+            return fix
         except Exception:
             self.db.rollback()
             raise
