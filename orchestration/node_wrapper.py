@@ -6,6 +6,13 @@ from exceptions.exceptions import InvalidStateTransitionException
 from fastapi.encoders import jsonable_encoder
 from langgraph.errors import GraphInterrupt
 
+def _format_exception(exc: BaseException) -> str:
+    """Unwrap task-group failures so the persisted step shows the root cause."""
+    if isinstance(exc, BaseExceptionGroup):
+        details = "; ".join(_format_exception(child) for child in exc.exceptions)
+        return f"{type(exc).__name__}: {details}"
+    return f"{type(exc).__name__}: {exc}"
+
 def run_node(node_name: str,node_fn: Callable[..., State],state: State,db: Session) -> State:
     service = WorkflowExecutionService(db)
     parent_step_id = state.get("current_step_id")
@@ -22,7 +29,7 @@ def run_node(node_name: str,node_fn: Callable[..., State],state: State,db: Sessi
     except GraphInterrupt:
         raise
     except Exception as exc:
-        error = str(exc)
+        error = _format_exception(exc)
         db.rollback()
         service.fail_step(step=step,error=error)
         service.fail_execution(execution_id=state["execution_id"],error=error)

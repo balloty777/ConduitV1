@@ -36,11 +36,21 @@ def build_graph(db:Session):
             return "failed"
         return state["action"]
     graph.add_conditional_edges("router",route_action,{"create_content":"marketing_worker","create_lead":"sales_worker","follow_up_lead":"sales_follow_up_worker","create_ticket":"tech_worker","create_ticket_fix":"tech_fix_worker","failed":END})
-    graph.add_edge("marketing_worker","approval_wait")
-    graph.add_edge("sales_worker","approval_wait")
-    graph.add_edge("sales_follow_up_worker","approval_wait")
-    graph.add_edge("tech_worker","approval_wait")
-    graph.add_edge("tech_fix_worker","approval_wait")
+    def route_after_worker(state: State) -> str:
+        return "failed" if state.get("status") == "failed" else "approval_wait"
+
+    for worker in (
+        "marketing_worker",
+        "sales_worker",
+        "sales_follow_up_worker",
+        "tech_worker",
+        "tech_fix_worker",
+    ):
+        graph.add_conditional_edges(
+            worker,
+            route_after_worker,
+            {"approval_wait": "approval_wait", "failed": END},
+        )
     
     def route_after_approval(state:State)->str:
         if state.get("rejection_reason"):
