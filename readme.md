@@ -98,7 +98,7 @@ Conduit has a real `pytest` suite, not just manual scripts — including full en
 ## Getting started
 
 ```bash
-git clone <repo-url>
+git clone <https://github.com/balloty777/ConduitV1>
 cd conduit
 
 # install dependencies
@@ -141,6 +141,3 @@ Conduit v1 proves the orchestration core end-to-end. Actively being worked on ne
 
 ---
 
-## License
-
-MIT
