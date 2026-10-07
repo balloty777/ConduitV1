@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#090a0d" />
+  <title>Conduit · AI Operations Control Room</title>
+  <link rel="stylesheet" href="/assets/css/app.css" />
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div><strong>CONDUIT</strong><small>AI OPERATIONS</small></div>
+      </div>
+      <nav class="nav" id="nav">
+        <div class="nav-label">CONDUIT</div>
+        <a href="#/projects" data-route="/projects"><span class="icon">◷</span>Previous projects</a>
+        <a href="#/approvals" data-route="/approvals"><span class="icon">✓</span>Approvals <b id="approval-count" class="nav-count hidden">0</b></a>
+        <a href="#/marketing" data-route="/marketing"><span class="icon">✦</span>Marketing</a>
+        <a href="#/sales" data-route="/sales"><span class="icon">◎</span>Sales</a>
+        <a href="#/tech" data-route="/tech"><span class="icon">⌘</span>Tech</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="system-mini"><span class="status-dot"></span><div><small>System status</small><strong id="sidebar-health">Checking</strong></div></div>
+        <button class="nav-button" id="settings-button"><span class="icon">⚙</span>Settings</button>
+      </div>
+    </aside>
+
+    <main class="main-shell">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobile-menu" aria-label="Open navigation">☰</button>
+        <div class="breadcrumb"><span>Conduit</span><i>/</i><strong id="page-name">Command Center</strong></div>
+        <div class="top-actions">
+          <span class="env-pill"><span class="status-dot"></span>LOCAL</span>
+          <span class="health-text"><span class="status-dot" id="top-health-dot"></span><span id="top-health">API checking</span></span>
+          <div class="operator"><span class="avatar">OP</span><span>Operator</span></div>
+        </div>
+      </header>
+
+      <div id="toast-region" class="toast-region" aria-live="polite"></div>
+      <section id="page" class="page" tabindex="-1"></section>
+    </main>
+  </div>
+
+  <div id="drawer" class="drawer-backdrop hidden" aria-hidden="true">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <div class="drawer-header"><div><span class="eyebrow" id="drawer-kicker">DETAIL</span><h2 id="drawer-title">Details</h2></div><button class="icon-button" id="drawer-close" aria-label="Close">×</button></div>
+      <div id="drawer-body" class="drawer-body"></div>
+    </aside>
+  </div>
+
+  <div id="modal" class="modal-backdrop hidden" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-header"><div><span class="eyebrow">DECISION REQUIRED</span><h2 id="modal-title">Reject and regenerate</h2></div><button class="icon-button" id="modal-close" aria-label="Close">×</button></div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/assets/js/app.js"></script>
+</body>
+</html>
