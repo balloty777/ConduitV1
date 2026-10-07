@@ -52,40 +52,51 @@ def _execution_data(execution: WorkflowExecution, include_steps: bool = False) -
 
 
 def _run_execution(execution_id: UUID) -> None:
-    with get_session() as db:
-        execution = db.get(WorkflowExecution, execution_id)
-        if execution is None:
-            return
-        initial_state = {
-            "request": execution.request,
-            "user_id": execution.user_id,
-            "execution_id": execution.id,
-            "current_step_id": None,
-            "workflow": None,
-            "action": None,
-            "confidence": None,
-            "status": "running",
-            "current_node": None,
-            "subject_type": None,
-            "subject_id": None,
-            "target_id": None,
-            "approval_request_id": None,
-            "rejection_reason": None,
-            "output": None,
-            "error": None,
-        }
-        try:
+    try:
+        with get_session() as db:
+            execution = db.get(WorkflowExecution, execution_id)
+            if execution is None:
+                return
+
+            # Release the read transaction before graph/checkpointer or model work.
+            # Render Postgres enforces idle_in_transaction_session_timeout; holding
+            # this transaction open can kill the connection before the first step is saved.
+            request_text = execution.request
+            user_id = execution.user_id
+            db.rollback()
+
+            initial_state = {
+                "request": request_text,
+                "user_id": user_id,
+                "execution_id": execution_id,
+                "current_step_id": None,
+                "workflow": None,
+                "action": None,
+                "confidence": None,
+                "status": "running",
+                "current_node": None,
+                "subject_type": None,
+                "subject_id": None,
+                "target_id": None,
+                "approval_request_id": None,
+                "rejection_reason": None,
+                "output": None,
+                "error": None,
+            }
             with build_graph(db) as graph:
                 result = graph.invoke(
                     initial_state,
-                    config={"configurable": {"thread_id": str(execution.id)}},
+                    config={"configurable": {"thread_id": str(execution_id)}},
                 )
-            execution.workflow = result.get("workflow")
-            if "__interrupt__" in result and execution.status == "running":
-                execution.status = "waiting"
+            current = db.get(WorkflowExecution, execution_id)
+            if current is not None:
+                current.workflow = result.get("workflow")
+            if "__interrupt__" in result and current is not None and current.status == "running":
+                current.status = "waiting"
+            if current is not None:
                 db.commit()
-        except Exception as exc:
-            db.rollback()
+    except Exception as exc:
+        with get_session() as db:
             current = db.get(WorkflowExecution, execution_id)
             if current is not None and current.status == "running":
                 WorkflowExecutionService(db).fail_execution(execution_id, str(exc))
