@@ -1,11 +1,10 @@
 from orchestration.state import State
 from llm.openai_service import OpenAIService
 from llm.schemas import MarketingDraft
-from mcp_servers.client import call_mcp_tool
-import json
 from sqlalchemy.orm import Session
 from services.approval_service import ApprovalService
 from uuid import UUID
+from services.marketing_service import MarketingService
 
 def marketing_worker_node(state:State,db:Session)->State:
     llm=OpenAIService().llm
@@ -40,11 +39,12 @@ def marketing_worker_node(state:State,db:Session)->State:
     """
     response = llm.with_structured_output(MarketingDraft).invoke(prompt)
     target_id = state.get("target_id")
+    service = MarketingService(db)
     if rejection_reason and target_id:
-        result = call_mcp_tool("update_content",{"content_id": str(target_id),"execution_id": str(state["execution_id"]),"brief": response.content,"platform": response.platform,"tone": response.tone,"audience": response.audience,"call_to_action": response.call_to_action,},"marketing")
+        content = service.update_content(content_id=target_id, brief=response.content, platform=response.platform, tone=response.tone, audience=response.audience, call_to_action=response.call_to_action)
     else:
-        result = call_mcp_tool("draft_content",{"execution_id": str(state["execution_id"]),"brief": response.content,"platform": response.platform,"tone": response.tone,"audience": response.audience,"call_to_action": response.call_to_action},"marketing")
-    tool_data = json.loads(result[0]["text"])
+        content = service.draft_content(execution_id=state["execution_id"], brief=response.content, platform=response.platform, tone=response.tone, audience=response.audience, call_to_action=response.call_to_action)
+    tool_data = {"content_id": str(content.id), "execution_id": str(content.execution_id), "platform": content.platform, "content": content.content, "tone": content.tone, "audience": content.audience, "call_to_action": content.call_to_action, "status": content.status}
     approval_service = ApprovalService(db)
     approval_request = approval_service.create_pending(subject_type="marketing_content",subject_id=UUID(tool_data["content_id"]),execution_id=state["execution_id"])
     return {**state,"current_node": "marketing_worker","status": "running","output": tool_data,"subject_type": "marketing_content","approval_request_id": approval_request.id,"subject_id": UUID(tool_data["content_id"]),"target_id": UUID(tool_data["content_id"])}

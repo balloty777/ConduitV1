@@ -3,9 +3,8 @@ from sqlalchemy.orm import Session
 from orchestration.state import State
 from llm.openai_service import OpenAIService
 from llm.schemas import SalesLeadDraft,SalesFollowUpDraft
-from mcp_servers.client import call_mcp_tool
 from services.approval_service import ApprovalService
-import json
+from services.sales_service import SalesService
 
 def sales_worker_node(state:State,db:Session)->State:
     llm=OpenAIService().llm
@@ -34,11 +33,12 @@ def sales_worker_node(state:State,db:Session)->State:
     Return the structured fields required by SalesLeadDraft.
     """
     response=llm.with_structured_output(SalesLeadDraft).invoke(prompt)
+    service = SalesService(db)
     if rejection_reason and target_id:
-        result=call_mcp_tool("update_lead",{"lead_id": str(target_id),"execution_id": str(state["execution_id"]),"name": response.name,"email": response.email,"phone": response.phone},"sales")
+        lead = service.update_lead(lead_id=target_id, execution_id=state["execution_id"], name=response.name, email=response.email, phone=response.phone)
     else:
-        result=call_mcp_tool("create_lead",{"execution_id":str(state["execution_id"]),"name":response.name,"email":response.email,"phone":response.phone},"sales")
-    tool_data=json.loads(result[0]["text"])
+        lead = service.create_lead(execution_id=state["execution_id"], name=response.name, email=response.email, phone=response.phone)
+    tool_data = {"lead_id": str(lead.id), "execution_id": str(lead.execution_id), "name": lead.name, "email": lead.email, "phone": lead.phone, "status": lead.status}
     approval_service=ApprovalService(db)
     approval_request=approval_service.create_pending(subject_type="sales_lead",subject_id=UUID(tool_data["lead_id"]),execution_id=state["execution_id"])
     return {**state,"current_node":"sales_worker","output":tool_data,"subject_type":"sales_lead","approval_request_id":approval_request.id,"subject_id":UUID(tool_data["lead_id"]),"target_id":UUID(tool_data["lead_id"]),"status":"running"}
@@ -78,9 +78,8 @@ def sales_follow_up_worker_node(state:State,db:Session)->State:
     """
     response=llm.with_structured_output(SalesFollowUpDraft).invoke(prompt)
     lead_id=target_id or response.lead_id
-    result=call_mcp_tool("follow_up_lead",{"lead_id":str(lead_id),"execution_id":str(state["execution_id"]),"message":response.message,"channel":response.channel},"sales")
-    tool_data=json.loads(result[0]["text"])
+    follow_up = SalesService(db).follow_up_lead(lead_id=lead_id, execution_id=state["execution_id"], message=response.message, channel=response.channel)
+    tool_data = {"follow_up_id": str(follow_up.id), "lead_id": str(follow_up.lead_id), "execution_id": str(follow_up.execution_id), "message": follow_up.message, "channel": follow_up.channel, "status": follow_up.status, "scheduled_at": follow_up.scheduled_at}
     approval_service=ApprovalService(db)
     approval_request=approval_service.create_pending(subject_id=UUID(tool_data["follow_up_id"]),subject_type="sales_follow_up",execution_id=state["execution_id"])
     return {**state,"current_node":"sales_follow_up_worker","status":"running","output":tool_data,"subject_type":"sales_follow_up","approval_request_id":approval_request.id,"subject_id":UUID(tool_data["follow_up_id"]),"target_id":lead_id}
-    

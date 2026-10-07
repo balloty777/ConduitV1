@@ -1,11 +1,10 @@
 from uuid import UUID
-import json
 from sqlalchemy.orm import Session
 from orchestration.state import State
 from llm.openai_service import OpenAIService
-from mcp_servers.client import call_mcp_tool
 from services.approval_service import ApprovalService
 from llm.schemas import TechTicketDraft,TechTicketFixDraft
+from services.tech_service import TechService
 
 def tech_worker_node(state:State,db:Session)->State:
     llm=OpenAIService().llm
@@ -37,11 +36,12 @@ def tech_worker_node(state:State,db:Session)->State:
     The proposed_fix must explain HOW IT SHOULD BE FIXED.
     """
     response=llm.with_structured_output(TechTicketDraft).invoke(prompt)
+    service = TechService(db)
     if rejection_reason and target_id:
-        result = call_mcp_tool("update_ticket",{"ticket_id": str(target_id),"execution_id": str(state["execution_id"]),"title": response.title,"category": response.category,"description": response.description,"proposed_fix":response.proposed_fix,"priority": response.priority},"tech")
+        ticket = service.update_ticket(ticket_id=target_id, execution_id=state["execution_id"], title=response.title, category=response.category, description=response.description, proposed_fix=response.proposed_fix, priority=response.priority)
     else:
-        result=call_mcp_tool("create_ticket",{"execution_id":str(state["execution_id"]),"title":response.title,"category":response.category,"description":response.description,"proposed_fix":response.proposed_fix,"priority":response.priority},"tech")
-    tool_data=json.loads(result[0]["text"])
+        ticket = service.create_ticket(execution_id=state["execution_id"], title=response.title, category=response.category, description=response.description, proposed_fix=response.proposed_fix, priority=response.priority)
+    tool_data = {"ticket_id": str(ticket.id), "execution_id": str(ticket.execution_id), "title": ticket.title, "category": ticket.category, "description": ticket.description, "proposed_fix": ticket.proposed_fix, "priority": ticket.priority, "status": ticket.status}
     approval_service=ApprovalService(db)
     ticket_id=UUID(tool_data["ticket_id"])
     approval_request=approval_service.create_pending(subject_type="tech_ticket",subject_id=UUID(tool_data["ticket_id"]),execution_id=state["execution_id"])
@@ -54,12 +54,12 @@ def tech_fix_worker_node(state:State,db:Session)->State:
     ticket_id=state.get("target_id")
     if not ticket_id:
         raise ValueError("target id is required to create a technical ticket fix")
-    ticket_result=call_mcp_tool("get_ticket",{"ticket_id":str(ticket_id)},"tech")
-    ticket_data=json.loads(ticket_result[0]["text"])
+    service = TechService(db)
+    ticket = service.get_ticket(ticket_id)
+    ticket_data = {"ticket_id": str(ticket.id), "title": ticket.title, "category": ticket.category, "description": ticket.description, "proposed_fix": ticket.proposed_fix}
     previous_fix = None
     if rejection_reason and existing_fix_id:
-        fix_result=call_mcp_tool("get_ticket_fix",{"fix_id":str(existing_fix_id)},"tech")
-        previous_fix=json.loads(fix_result[0]["text"])["proposed_fix"]
+        previous_fix = service.get_ticket_fix(existing_fix_id).proposed_fix
     prompt = f"""
     Generate the corrected code for an existing technical support ticket.
 
@@ -104,10 +104,10 @@ def tech_fix_worker_node(state:State,db:Session)->State:
     response=llm.with_structured_output(TechTicketFixDraft).invoke(prompt)
     fixed_code=response.fixed_code
     if rejection_reason and existing_fix_id:
-        result=call_mcp_tool("update_ticket_fix",{"fix_id": str(existing_fix_id),"execution_id": str(state["execution_id"]),"proposed_fix": fixed_code},"tech")
+        fix = service.update_ticket_fix(fix_id=existing_fix_id, execution_id=state["execution_id"], proposed_fix=fixed_code)
     else:
-        result=call_mcp_tool("create_ticket_fix",{"ticket_id":str(ticket_id),"execution_id":str(state["execution_id"]),"proposed_fix":fixed_code},"tech")
-    tool_data=json.loads(result[0]["text"])
+        fix = service.create_ticket_fix(ticket_id=ticket_id, execution_id=state["execution_id"], proposed_fix=fixed_code)
+    tool_data = {"fix_id": str(fix.id), "ticket_id": str(fix.ticket_id), "execution_id": str(fix.execution_id), "proposed_fix": fix.proposed_fix, "status": fix.status}
     approval_service=ApprovalService(db)
     fix_id=UUID(tool_data["fix_id"])
     approval_request=approval_service.create_pending(subject_id=fix_id,subject_type="tech_ticket_fix",execution_id=state["execution_id"])
